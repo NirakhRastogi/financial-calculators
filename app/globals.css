@@ -1,26 +1,232 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
 :root {
+  --excel-green: #107c41;
+  --excel-green-hover: #0d6635;
+  --excel-border: #e1e1e1;
+  --excel-header-bg: #f8f9fa;
+  --excel-header-text: #5e5e5e;
+  --excel-selected-bg: rgba(16, 124, 65, 0.08);
+  --excel-selected-border: #107c41;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #212529;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme='dark'] {
+  --excel-green: #2ebc6c;
+  --excel-green-dark: #217346;
+  --excel-border: #333333;
+  --excel-header-bg: #1e1e1e;
+  --excel-header-text: #ccc;
+  --excel-selected-bg: #1a3326;
+  --excel-selected-border: #2ebc6c;
+  --background: #0f0f0f;
+  --foreground: #e0e0e0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.excel-header {
+  background-color: var(--excel-header-bg);
+  color: var(--excel-header-text);
+  font-size: 12px;
+  font-weight: 400;
+  border: 1px solid var(--excel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.excel-cell {
+  border-right: 1px solid var(--excel-border);
+  border-bottom: 1px solid var(--excel-border);
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+  background: transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  height: 32px; /* Fixed height */
+  display: flex;
+  align-items: center;
+}
+
+.excel-cell:hover:not(.header) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.excel-cell:focus {
+  z-index: 10;
+  background-color: #fff;
+  box-shadow: inset 0 0 0 2px var(--excel-selected-border), 0 0 8px rgba(16, 124, 65, 0.2);
+}
+
+.excel-cell.selected {
+  background-color: rgba(16, 124, 65, 0.1) !important;
+  box-shadow: none !important;
+  position: relative;
+  z-index: 5;
+}
+
+.excel-cell.header {
+  background: var(--excel-header-bg);
+  text-align: center;
+  font-weight: 500;
+  color: var(--excel-header-text);
+}
+
+.excel-row-num {
+  width: 40px;
+  height: 32px; /* Matching cell height */
+  background: var(--excel-header-bg);
+  border-right: 1px solid var(--excel-border);
+  border-bottom: 1px solid var(--excel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.excel-tab {
+  height: 100%;
+  width: 140px !important;
+  min-width: 140px !important;
+  max-width: 140px !important;
+  flex: 0 0 140px !important;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  border-right: 1px solid var(--excel-border);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f8f9fa;
+}
+
+.excel-tab:hover {
+  background: #eee;
+}
+
+.excel-tab.active {
+  color: var(--excel-green);
+  font-weight: 600;
+  background: var(--background);
+}
+
+.excel-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--excel-green);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(3px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.excel-ribbon-btn {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.excel-ribbon-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+.excel-ribbon-btn:active {
+  transform: translateY(0);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border: 3px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar-x::-webkit-scrollbar:horizontal {
+  height: 0;
+  display: none;
+}
+
+.no-scrollbar-x {
+  scrollbar-width: none; /* For Firefox, this hides both, so we use it carefully */
+  -ms-overflow-style: none;
+}
+
+.excel-input {
+  width: 100%;
+  height: 100%;
+  border: none !important;
+  padding: 0 10px;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  display: block;
 }
