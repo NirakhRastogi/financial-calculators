@@ -438,7 +438,9 @@ export default function ExcelTaxCalculator() {
   };
 
   const handlePrepaymentChange = (month: number, val: string) => {
-    const amount = val === "" ? 0 : Number(val.replace(/,/g, ""));
+    // Strip everything except digits and decimal point to be robust against symbols/commas
+    const cleaned = val.replace(/[^\d.]/g, "");
+    const amount = cleaned === "" ? 0 : Number(cleaned);
     if (isNaN(amount)) return;
     const existing = activeTab.prepayments.filter((p) => p.month !== month);
     updateActiveTab({
@@ -968,16 +970,20 @@ export default function ExcelTaxCalculator() {
                         {currency.symbol} {formatCurrency(row.principalPaid, currency.locale)}
                       </div>
                       <div
-                        className={`excel-cell w-32 p-0 bg-blue-50/30 ${isCellSelected(globalIdx, "E") ? "selected" : ""}`}
+                        className={`excel-cell w-32 p-0 bg-blue-50/30 flex items-center ${isCellSelected(globalIdx, "E") ? "selected" : ""}`}
                         onMouseDown={(e) => handleMouseDown(e, globalIdx, "E")}
                         onMouseEnter={() => handleMouseEnter(globalIdx, "E")}
                       >
+                        {row.prepayment > 0 && (
+                          <span className="pl-2 text-blue-400 text-[10px] shrink-0 select-none">
+                            {currency.symbol}
+                          </span>
+                        )}
                         <input
-                          className="excel-input text-right text-blue-700 font-medium"
-                          type="text"
-                          value={
-                            row.prepayment ? `${currency.symbol} ${formatCurrency(row.prepayment, currency.locale)}` : ""
-                          }
+                          className="excel-input text-right text-blue-700 font-medium flex-1 bg-transparent border-none outline-none pr-2 h-full w-full"
+                          type="number"
+                          placeholder={row.prepayment === 0 ? "0" : ""}
+                          value={row.prepayment || ""}
                           onChange={(e) =>
                             handlePrepaymentChange(
                               row.monthIndex,
