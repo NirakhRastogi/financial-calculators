@@ -25,6 +25,7 @@ interface TabData {
   startMonth: string;
   prepayments: Prepayment[];
   interestChanges: InterestChange[];
+  prepaymentMode?: "reduce_tenure" | "reduce_emi";
 }
 
 interface AmortizationRow {
@@ -78,6 +79,7 @@ const calculateAmortization = (data: TabData): AmortizationResult => {
     startMonth,
     prepayments,
     interestChanges,
+    prepaymentMode = "reduce_tenure",
   } = data;
 
   const schedule: AmortizationRow[] = [];
@@ -137,6 +139,19 @@ const calculateAmortization = (data: TabData): AmortizationResult => {
     });
 
     if (remainingPrincipal <= 0) break;
+
+    if (prepayment > 0 && prepaymentMode === "reduce_emi") {
+      const remainingMonths = totalMonthsOriginal - monthIndex - 1;
+      if (remainingMonths > 0) {
+        const monthlyRate = currentInterestRate / 12 / 100;
+        currentEMI =
+          (remainingPrincipal *
+            monthlyRate *
+            Math.pow(1 + monthlyRate, remainingMonths)) /
+          (Math.pow(1 + monthlyRate, remainingMonths) - 1);
+      }
+    }
+
     monthIndex++;
   }
 
@@ -163,6 +178,7 @@ export default function ExcelTaxCalculator() {
       startMonth: new Date().toISOString().slice(0, 7),
       prepayments: [],
       interestChanges: [],
+      prepaymentMode: "reduce_tenure",
     },
   ]);
 
@@ -404,6 +420,7 @@ export default function ExcelTaxCalculator() {
         name: newName,
         prepayments: [],
         interestChanges: [],
+        prepaymentMode: "reduce_tenure",
       },
     ]);
     setActiveTabId(newId);
@@ -471,6 +488,7 @@ export default function ExcelTaxCalculator() {
         ["Interest Rate (%)", tab.interestRate, "", tabAmortization.totalSavings < 0 ? "Interest Added" : "Interest Saved", Math.abs(tabAmortization.totalSavings), "", ""],
         ["Tenure (Years)", tab.tenureYears, "", tabAmortization.monthsSaved < 0 ? "Months Added" : "Months Saved", Math.abs(tabAmortization.monthsSaved), "", ""],
         ["Start Month", tab.startMonth, "", "", "", "", ""],
+        ["Prepayment Mode", tab.prepaymentMode === "reduce_emi" ? "Reduce EMI" : "Reduce Tenure", "", "", "", "", ""],
         [],
         ["AMORTIZATION SCHEDULE", "", "", "", "", "", ""],
         ["Month", "EMI", "Interest", "Principal", "Prepayment", "Rate %", "Balance"],
@@ -874,24 +892,64 @@ export default function ExcelTaxCalculator() {
               ></div>
             </div>
 
-            {/* Empty spacer row 6 to maintain Excel grid consistency */}
-            {[6].map((r) => (
-              <div key={r} className="flex">
-                <div
-                  className={`excel-row-num transition-colors duration-200 ${isRowSelected(r) ? "bg-[#107c41]/10 text-[#107c41] font-bold border-r-2 border-r-[#107c41]" : ""}`}
-                >
-                  {r}
-                </div>
-                {COLUMNS.slice(1).map((c) => (
-                  <div
-                    key={c}
-                    className={`excel-cell w-32 ${isCellSelected(r, c) ? "selected" : ""}`}
-                    onMouseDown={(e) => handleMouseDown(e, r, c)}
-                    onMouseEnter={() => handleMouseEnter(r, c)}
-                  ></div>
-                ))}
+            {/* Prepayment Mode Row 6 */}
+            <div className="flex">
+              <div
+                className={`excel-row-num transition-colors duration-200 ${isRowSelected(6) ? "bg-[#107c41]/10 text-[#107c41] font-bold border-r-2 border-r-[#107c41]" : ""}`}
+              >
+                6
               </div>
-            ))}
+              <div
+                className={`excel-cell w-32 text-gray-500 ${isCellSelected(6, "A") ? "selected" : ""}`}
+                onMouseDown={(e) => handleMouseDown(e, 6, "A")}
+                onMouseEnter={() => handleMouseEnter(6, "A")}
+              >
+                Prepay Mode
+              </div>
+              <div
+                className={`excel-cell w-32 p-0 ${isCellSelected(6, "B") ? "selected" : ""}`}
+                onMouseDown={(e) => handleMouseDown(e, 6, "B")}
+                onMouseEnter={() => handleMouseEnter(6, "B")}
+              >
+                <select
+                  className="excel-input font-bold bg-transparent outline-none cursor-pointer"
+                  value={activeTab.prepaymentMode || "reduce_tenure"}
+                  onChange={(e) =>
+                    updateActiveTab({
+                      prepaymentMode: e.target.value as "reduce_tenure" | "reduce_emi",
+                    })
+                  }
+                >
+                  <option value="reduce_tenure">Reduce Tenure</option>
+                  <option value="reduce_emi">Reduce EMI</option>
+                </select>
+              </div>
+              <div
+                className={`excel-cell w-32 ${isCellSelected(6, "C") ? "selected" : ""}`}
+                onMouseDown={(e) => handleMouseDown(e, 6, "C")}
+                onMouseEnter={() => handleMouseEnter(6, "C")}
+              ></div>
+              <div
+                className={`excel-cell w-32 ${isCellSelected(6, "D") ? "selected" : ""}`}
+                onMouseDown={(e) => handleMouseDown(e, 6, "D")}
+                onMouseEnter={() => handleMouseEnter(6, "D")}
+              ></div>
+              <div
+                className={`excel-cell w-32 ${isCellSelected(6, "E") ? "selected" : ""}`}
+                onMouseDown={(e) => handleMouseDown(e, 6, "E")}
+                onMouseEnter={() => handleMouseEnter(6, "E")}
+              ></div>
+              <div
+                className={`excel-cell w-32 ${isCellSelected(6, "F") ? "selected" : ""}`}
+                onMouseDown={(e) => handleMouseDown(e, 6, "F")}
+                onMouseEnter={() => handleMouseEnter(6, "F")}
+              ></div>
+              <div
+                className={`excel-cell w-32 ${isCellSelected(6, "G") ? "selected" : ""}`}
+                onMouseDown={(e) => handleMouseDown(e, 6, "G")}
+                onMouseEnter={() => handleMouseEnter(6, "G")}
+              ></div>
+            </div>
 
             {/* Table Header (Row 7) */}
             <div className="flex">
